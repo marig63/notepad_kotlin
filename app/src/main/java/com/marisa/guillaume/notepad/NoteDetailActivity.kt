@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcelable
 import android.widget.TextView
 import android.support.v7.widget.Toolbar
 import android.view.Menu
@@ -85,7 +86,7 @@ class NoteDetailActivity : AppCompatActivity() {
         note.text = textView.text.toString()
 
         intent = Intent(ACTION_SAVE_NOTE)
-        intent.putExtra(EXTRA_NOTE,note)
+        intent.putExtra(EXTRA_NOTE,note as Parcelable)
         intent.putExtra(EXTRA_NOTE_INDEX,noteIndex)
         setResult(Activity.RESULT_OK, intent)
         finish()
