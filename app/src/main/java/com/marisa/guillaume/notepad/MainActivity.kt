@@ -1,11 +1,13 @@
 package com.marisa.guillaume.notepad
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -23,12 +25,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-
-
+        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        setSupportActionBar(toolbar)
 
         notes = mutableListOf<Note>()
         notes.add(Note("Note 1","éergferopgzepkgegkper"))
@@ -51,14 +49,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             Log.i("notepad","click sur une note")
             showNoteDetail(view.tag as Int)
         }
+        else{
+            when (view.id){
+                R.id.fab -> createNewNote()
+            }
+        }
+    }
+
+    private fun createNewNote() {
+        showNoteDetail(-1)
     }
 
     fun showNoteDetail(noteIndex:Int){
-        val note = notes[noteIndex]
+
+        val note = if(noteIndex == -1){
+            Note()
+        }
+        else{
+            notes[noteIndex]
+        }
+
         val intent = Intent(this, NoteDetailActivity::class.java)
         intent.putExtra(NoteDetailActivity.EXTRA_NOTE,note)
         intent.putExtra(NoteDetailActivity.EXTRA_NOTE_INDEX,noteIndex)
-        startActivity(intent)
+        startActivityForResult(intent,NoteDetailActivity.REQUEST_EDIT_NOTE)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -75,5 +90,48 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if(resultCode != Activity.RESULT_OK || data == null){
+            return
+        }
+
+        when(requestCode){
+            NoteDetailActivity.REQUEST_EDIT_NOTE -> processEditNoteResult(data)
+        }
+
+    }
+
+    private fun processEditNoteResult(data: Intent) {
+        val noteIndex = data.getIntExtra(NoteDetailActivity.EXTRA_NOTE_INDEX, -1)
+        when(data.action){
+            NoteDetailActivity.ACTION_SAVE_NOTE -> {
+                val note = data.getParcelableExtra<Note>(NoteDetailActivity.EXTRA_NOTE)
+                saveNote(note,noteIndex)
+            }
+
+            NoteDetailActivity.ACTION_DELTE_NOTE -> {
+                deleteNote(noteIndex)
+            }
+        }
+
+
+    }
+
+    private fun deleteNote(noteIndex: Int) {
+        if(noteIndex < 0 ) return
+        val note = notes.removeAt(noteIndex)
+        adapter.notifyDataSetChanged()
+    }
+
+    fun saveNote(note: Note, noteIndex: Int){
+        if(noteIndex < 0){
+            notes.add(0,note)
+        }
+        else{
+            notes[noteIndex] = note
+        }
+        adapter.notifyDataSetChanged()
     }
 }
